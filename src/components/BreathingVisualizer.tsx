@@ -9,22 +9,22 @@ const phaseVariants = {
   INHALE: { 
     scale: 1.8, 
     opacity: 1, 
-    transition: { duration: 6, ease: "linear" } 
+    transition: { duration: 5, ease: "linear" } 
   },
   HOLD_FULL: { 
     scale: 1.8, 
     opacity: 0.8,
-    transition: { duration: 8, ease: "linear" } 
+    transition: { duration: 4, ease: "linear" } 
   },
   EXHALE: { 
     scale: 1, 
     opacity: 0.6,
-    transition: { duration: 9, ease: "linear" } 
+    transition: { duration: 7, ease: "linear" } 
   },
   HOLD_EMPTY: {
     scale: 1,
     opacity: 0.4,
-    transition: { duration: 8, ease: "linear" }
+    transition: { duration: 4, ease: "linear" }
   }
 };
 

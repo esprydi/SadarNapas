@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { BreathingVisualizer } from './components/BreathingVisualizer';
 import { ManifestationText } from './components/ManifestationText';
 import { EducationModal } from './components/EducationModal';
-import { playChime, playFinishChime, stopAudio } from './lib/audio';
+import { playChime, playFinishChime, stopAudio, playTick } from './lib/audio';
 import { SessionState, BreathingPhase, DURATION_OPTIONS } from './types';
 
 export default function App() {
@@ -18,6 +18,7 @@ export default function App() {
   const [sessionDuration, setSessionDuration] = useState(DURATION_OPTIONS[0].value);
   const [timeLeft, setTimeLeft] = useState(DURATION_OPTIONS[0].value);
   const [cycleCount, setCycleCount] = useState(0);
+  const [countdown, setCountdown] = useState(5);
   const [customMinutes, setCustomMinutes] = useState("");
   const [isEducationOpen, setIsEducationOpen] = useState(false);
   
@@ -47,7 +48,7 @@ export default function App() {
 
     let currentPhase: BreathingPhase = 'INHALE';
     let ticksInPhase = 0;
-    let phaseDurationTicks = 6;
+    let phaseDurationTicks = 5;
 
     const triggerAudio = (tick: number) => {
       if (!soundEnabledRef.current) return;
@@ -59,25 +60,25 @@ export default function App() {
     const advancePhase = () => {
       if (currentPhase === 'INHALE') {
         currentPhase = 'HOLD_FULL';
-        phaseDurationTicks = 8;
+        phaseDurationTicks = 4;
       } else if (currentPhase === 'HOLD_FULL') {
         currentPhase = 'EXHALE';
-        phaseDurationTicks = 9;
+        phaseDurationTicks = 7;
       } else if (currentPhase === 'EXHALE') {
         const remaining = endTime - Date.now();
-        if (isTimeUp || remaining <= 31000) {
+        if (isTimeUp || remaining <= 20000) {
           setSessionState('FINISHED');
           return;
         }
         currentPhase = 'HOLD_EMPTY';
-        phaseDurationTicks = 8;
+        phaseDurationTicks = 4;
       } else if (currentPhase === 'HOLD_EMPTY') {
         if (isTimeUp) {
           setSessionState('FINISHED');
           return;
         }
         currentPhase = 'INHALE';
-        phaseDurationTicks = 6;
+        phaseDurationTicks = 5;
         setCycleCount(c => c + 1);
       }
       
@@ -131,11 +132,26 @@ export default function App() {
     }
   }, [sessionState]);
 
+  useEffect(() => {
+    if (sessionState === 'PREPARING') {
+      if (countdown > 0) {
+        if (soundEnabledRef.current) {
+          playTick();
+        }
+        const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+        return () => clearTimeout(timer);
+      } else {
+        setSessionState('ACTIVE');
+        setTimeLeft(sessionDuration);
+        setCycleCount(0);
+        setPhase('INHALE');
+      }
+    }
+  }, [sessionState, countdown, sessionDuration]);
+
   const startSession = () => {
-    setSessionState('ACTIVE');
-    setTimeLeft(sessionDuration);
-    setCycleCount(0);
-    setPhase('INHALE');
+    setSessionState('PREPARING');
+    setCountdown(5);
   };
 
   const resetSession = () => {
@@ -255,6 +271,34 @@ export default function App() {
                 <Play className="w-5 h-5 fill-teal-950" />
                 Mulai Sesi Fokus
               </button>
+            </motion.div>
+          )}
+
+          {sessionState === 'PREPARING' && (
+            <motion.div
+              key="preparing"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="flex flex-col items-center justify-center text-center space-y-8 absolute inset-0"
+            >
+              <div className="h-32 flex items-center justify-center">
+                <AnimatePresence mode="popLayout">
+                  <motion.div 
+                    key={countdown}
+                    initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.8 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-8xl font-medium tracking-tight text-teal-400 font-mono"
+                  >
+                    {countdown}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              <p className="text-teal-100 max-w-sm mx-auto text-xl leading-relaxed">
+                Pastikan Anda dalam kondisi nyaman dan rileks
+              </p>
             </motion.div>
           )}
 

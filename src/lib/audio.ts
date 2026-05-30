@@ -85,6 +85,40 @@ const createOscillatorAndEnvelope = (freq: number, startTime: number, maxGain: n
   osc.stop(startTime + decayTime);
 };
 
+export const playTick = () => {
+  if (typeof window === 'undefined') return;
+
+  if (!audioContext) {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioContextClass) {
+        audioContext = new AudioContextClass();
+    } else {
+        return;
+    }
+  }
+
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+
+  const t = audioContext.currentTime;
+  const osc = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(440, t); // A4
+  
+  gainNode.gain.setValueAtTime(0, t);
+  gainNode.gain.linearRampToValueAtTime(0.1, t + 0.05); // quick attack
+  gainNode.gain.exponentialRampToValueAtTime(0.001, t + 0.2); // quick decay
+  
+  osc.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  
+  osc.start(t);
+  osc.stop(t + 0.2);
+};
+
 export const stopAudio = () => {
   if (audioContext) {
     audioContext.close();

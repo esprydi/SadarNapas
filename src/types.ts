@@ -1,4 +1,4 @@
-export type SessionState = 'IDLE' | 'ACTIVE' | 'FINISHED';
+export type SessionState = 'IDLE' | 'PREPARING' | 'ACTIVE' | 'FINISHED';
 export type BreathingPhase = 'INHALE' | 'HOLD_FULL' | 'EXHALE' | 'HOLD_EMPTY';
 
 export const AFFIRMATIONS = [
